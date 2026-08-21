@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clue Hunt Case Files</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --leather:#241811; --leather-2:#2E2013; --parchment:#EAD9AE; --parchment-2:#DFC989;
+    --ink:#2B1B12; --gold:#C9A227; --gold-bright:#E8C547; --wax:#8B2E2E; --wax-dark:#6E2222;
+    --cream:#F2E7C9; --muted:#B8A576; --line: rgba(232,197,71,0.22);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; font-family:'EB Garamond', serif; color:var(--cream);
+    background: radial-gradient(ellipse at top, #3a2a18 0%, var(--leather) 55%, #170f0a 100%);
+    background-attachment:fixed;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:34px 20px 60px; }
+  .masthead{ text-align:center; margin-bottom:22px; position:relative; }
+  .seal{
+    width:64px; height:64px; margin:0 auto 10px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #8a6c14 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cinzel', serif; font-weight:900; font-size:22px; color:var(--leather);
+    box-shadow:0 4px 14px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+    border:2px solid #7a5f13;
+  }
+  .masthead h1{
+    font-family:'Cinzel', serif; font-weight:700; font-size:32px; letter-spacing:2px;
+    margin:0; color:var(--gold-bright); text-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+  .masthead p{
+    font-family:'Space Mono', monospace; font-size:11px; letter-spacing:5px;
+    text-transform:uppercase; color:var(--muted); margin:8px 0 0;
+  }
+  .divider{ width:180px; height:1px; margin:16px auto; background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+
+  .statusbar{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Space Mono', monospace; font-size:11px; letter-spacing:1px; color:var(--muted);
+    margin-bottom:16px; padding:0 4px; flex-wrap:wrap; gap:8px;
+  }
+  .statusbar a{ color:var(--gold-bright); cursor:pointer; text-decoration:none; border-bottom:1px dotted var(--gold-bright); }
+  .statusbar .who{ color:var(--cream); }
+  .statusbar .owner-badge{
+    font-size:9px; background:var(--wax); color:var(--cream); padding:2px 7px; border-radius:10px;
+    letter-spacing:1px; margin-left:6px; text-transform:uppercase;
+  }
+
+  .tabs{ display:flex; gap:2px; flex-wrap:wrap; }
+  .tab{
+    font-family:'Cinzel', serif; font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+    padding:11px 18px; background:var(--leather-2); color:var(--muted);
+    border:1px solid var(--line); border-bottom:none; cursor:pointer;
+    border-radius:6px 6px 0 0; transition:all .15s ease;
+  }
+  .tab:hover{ color:var(--cream); }
+  .tab.active{ background:var(--parchment); color:var(--ink); border-color:var(--gold); }
+  .tab[hidden]{ display:none; }
+
+  .panel{
+    background:var(--parchment); color:var(--ink); border:1px solid var(--gold);
+    border-radius:0 8px 8px 8px; padding:30px; min-height:340px;
+    background-image: repeating-linear-gradient(0deg, rgba(139,107,43,0.03) 0px, rgba(139,107,43,0.03) 1px, transparent 1px, transparent 26px);
+    box-shadow:0 14px 34px rgba(0,0,0,0.45);
+  }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  h2.section-title{
+    font-family:'Cinzel', serif; font-size:16px; letter-spacing:1px; color:var(--wax);
+    margin:0 0 16px; text-transform:uppercase; border-bottom:1px solid rgba(139,46,46,0.25); padding-bottom:8px;
+  }
+
+  .lookup-row{ display:flex; gap:10px; margin-bottom:6px; }
+  input[type=text], input[type=password], select, textarea{
+    font-family:'Space Mono', monospace; background:#fbf3dd; border:1px solid rgba(43,27,18,0.3);
+    color:var(--ink); padding:11px 14px; border-radius:5px; font-size:14px; width:100%;
+  }
+  input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--wax); }
+  #lookupInput{ flex:1; text-transform:uppercase; letter-spacing:2px; }
+  .btn{
+    font-family:'Cinzel', serif; letter-spacing:1px; text-transform:uppercase; font-size:12px;
+    background:var(--wax); color:var(--cream); border:1px solid #5a1c1c; padding:0 22px;
+    border-radius:5px; cursor:pointer; transition:background .15s ease; min-height:38px;
+  }
+  .btn:hover{ background:var(--wax-dark); }
+  .btn.secondary{ background:transparent; border:1px solid rgba(43,27,18,0.3); color:var(--ink); }
+  .btn.secondary:hover{ border-color:var(--wax); color:var(--wax); }
+  .btn.gold{ background:var(--gold); color:var(--ink); border-color:#8a6c14; }
+  .btn.gold:hover{ background:var(--gold-bright); }
+  .btn.google{ background:#fff; color:#3c4043; border-color:#dadce0; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
+  .btn.google:hover{ background:#f7f7f7; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .hint{ font-size:13px; color:#6b5a3d; margin:6px 2px 0; font-style:italic; }
+
+  .stage{ margin-top:26px; min-height:220px; display:flex; align-items:center; justify-content:center; }
+  .empty-msg{ text-align:center; color:#8a7550; font-family:'Space Mono', monospace; font-size:13px; letter-spacing:1px; }
+  .empty-msg .big{ display:block; font-size:30px; margin-bottom:10px; }
+
+  .reveal-wrap{ position:relative; width:100%; max-width:420px; }
+  .card{
+    background:var(--cream); color:var(--ink); border-radius:4px; overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,0.4), 0 0 0 1px var(--gold);
+    transform:scale(0.9) rotate(-1deg); opacity:0; animation:pop .3s ease forwards;
+  }
+  @keyframes pop{ to{ transform:scale(1) rotate(0deg); opacity:1; } }
+  .card-photo{ width:100%; max-height:340px; object-fit:contain; display:block; background:var(--leather); }
+  .card-photo-empty{
+    width:100%; height:100px; background:var(--parchment-2); display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono', monospace; font-size:11px; letter-spacing:2px; color:var(--ink); opacity:0.45; text-transform:uppercase;
+  }
+  .card-body{ padding:18px 20px 20px; position:relative; }
+  .card-top{ border-bottom:1px solid rgba(43,27,18,0.15); padding-bottom:10px; margin-bottom:10px; }
+  .card-name{ font-family:'Cinzel', serif; font-weight:700; font-size:19px; line-height:1.25; margin:0; color:var(--ink); }
+  .card-num{ font-family:'Space Mono', monospace; font-size:11px; color:#6b5a3d; margin-top:3px; }
+  .card-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tag{
+    font-family:'Space Mono', monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    padding:3px 9px; border-radius:20px; border:1px solid rgba(43,27,18,0.3);
+  }
+  .tag.branch{ background:rgba(139,46,46,0.15); border-color:rgba(139,46,46,0.4); color:var(--wax); }
+  .card-power{
+    font-size:13px; line-height:1.5; background:rgba(139,46,46,0.06); border-left:2px solid var(--wax);
+    padding:8px 10px; margin:0 0 6px; font-style:italic;
+  }
+  .stamp-mark{
+    position:absolute; top:14px; right:-8px; font-family:'Cinzel', serif; font-weight:700; font-size:12px;
+    letter-spacing:2px; color:var(--wax); border:2px solid var(--wax); padding:4px 10px; border-radius:4px;
+    transform:rotate(8deg) scale(1.3); opacity:0; text-transform:uppercase; animation:stamp .35s ease .2s forwards;
+    pointer-events:none; background:rgba(255,255,255,0.4);
+  }
+  @keyframes stamp{ to{ transform:rotate(8deg) scale(1); opacity:0.9; } }
+  .found-badge{
+    position:absolute; top:14px; left:14px; font-family:'Space Mono', monospace; font-size:9px; letter-spacing:1.5px;
+    color:var(--gold-bright); background:var(--leather); text-transform:uppercase; padding:3px 8px; border-radius:3px;
+  }
+  .codes-count{ font-size:11px; color:#8a7550; font-family:'Space Mono', monospace; margin-top:8px; }
+
+  .browse-toolbar{ display:flex; gap:10px; margin-bottom:18px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px; }
+  .mini-card{
+    background:#fbf3dd; border:1px solid rgba(43,27,18,0.2); border-radius:6px; overflow:hidden; cursor:pointer;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .mini-card:hover{ border-color:var(--wax); transform:translateY(-2px); }
+  .mini-photo{ width:100%; height:95px; object-fit:cover; display:block; background:var(--parchment-2); }
+  .mini-photo-empty{ width:100%; height:55px; background:var(--parchment-2); }
+  .mini-info{ padding:9px 11px; }
+  .mini-name{ font-size:13px; font-weight:600; margin:0; color:var(--ink); }
+  .grid-empty{
+    grid-column:1/-1; text-align:center; padding:50px 0; color:#8a7550; font-family:'Space Mono', monospace; font-size:13px;
+  }
+
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-grid .full{ grid-column:1/-1; }
+  label{
+    display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--wax); margin-bottom:6px;
+  }
+  textarea{ resize:vertical; min-height:64px; font-family:'EB Garamond', serif; font-size:15px; }
+  .photo-drop{
+    border:1px dashed rgba(43,27,18,0.3); border-radius:5px; padding:14px; text-align:center; cursor:pointer;
+    font-family:'Space Mono', monospace; font-size:12px; color:#6b5a3d; position:relative;
+  }
+  .photo-drop:hover{ border-color:var(--wax); color:var(--ink); }
+  .photo-drop input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .photo-preview{ max-width:100%; max-height:120px; border-radius:4px; margin-top:8px; display:none; }
+  .form-actions{ display:flex; gap:10px; margin-top:20px; align-items:center; flex-wrap:wrap; }
+  .form-msg{ font-family:'Space Mono', monospace; font-size:12px; color:#6b5a3d; }
+  .form-msg.ok{ color:#3d6b3d; }
+  .form-msg.err{ color:var(--wax); }
+
+  .stats-line{
+    display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:14px;
+    border-top:1px solid rgba(43,27,18,0.15); font-family:'Space Mono', monospace; font-size:11px; color:#8a7550; letter-spacing:1px;
+  }
+
+  .login-box{ max-width:340px; margin:10px auto; text-align:center; }
+  .login-box p.lead{ font-family:'Space Mono', monospace; font-size:12px; color:#6b5a3d; margin:0 0 16px; }
+  .login-box input{ text-align:center; letter-spacing:1px; margin-bottom:10px; }
+
+  .claim-owner-box{
+    margin-top:20px; padding:14px; border:1px dashed rgba(139,46,46,0.4); border-radius:6px;
+    text-align:center; background:rgba(139,46,46,0.05);
+  }
+  .claim-owner-box p{ font-family:'Space Mono', monospace; font-size:11px; color:#6b5a3d; margin:0 0 10px; }
+
+  @media (max-width:560px){
+    .form-grid{ grid-template-columns:1fr; }
+    .masthead h1{ font-size:23px; letter-spacing:1px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="seal">39</div>
+    <h1>Clue Hunt Case Files</h1>
+    <p>Cahill Family Archive &middot; Restricted Access</p>
+  </div>
+  <div class="divider"></div>
+
+  <div class="statusbar">
+    <span id="userStatus"><a id="signInLink">Sign In with Google</a></span>
+    <span id="ownerHint"></span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-view="lookup">Lookup</div>
+    <div class="tab" data-view="mycollection" id="tabCollection" hidden>My Collection</div>
+    <div class="tab" data-view="addcode" id="tabAddCode" hidden>Add a Code</div>
+    <div class="tab" data-view="browse" id="tabBrowse" hidden>Case Files</div>
+    <div class="tab" data-view="add" id="tabAdd" hidden>Add Card</div>
+    <div class="tab" data-view="review" id="tabReview" hidden>Review Codes</div>
+  </div>
+
+  <div class="panel">
+
+    <!-- SIGN IN -->
+    <div class="view" id="view-signin">
+      <h2 class="section-title">Sign In</h2>
+      <div class="login-box">
+        <p class="lead">Sign in with Google to track the cards you've uncovered.</p>
+        <button class="btn google" id="googleSignInBtn" style="width:100%;">Sign in with Google</button>
+        <p class="form-msg" id="signinMsg"></p>
+      </div>
+    </div>
+
+    <!-- CHOOSE AGENT NAME (first-time sign in) -->
+    <div class="view" id="view-choosename">
+      <h2 class="section-title">Choose Your Agent Name</h2>
+      <div class="login-box">
+        <p class="lead">This is the name other agents will see — it doesn't have to be your real name.</p>
+        <input type="text" id="chooseNameInput" placeholder="AGENT NAME" autocomplete="off">
+        <button class="btn gold" id="chooseNameBtn" style="width:100%;">Start Hunting</button>
+        <p class="form-msg" id="chooseNameMsg"></p>
+      </div>
+    </div>
+
+    <!-- LOOKUP -->
+    <div class="view active" id="view-lookup">
+      <h2 class="section-title">Decode a Card</h2>
+      <div class="lookup-row">
+        <input type="text" id="lookupInput" placeholder="ENTER CODE" autocomplete="off">
+        <button class="btn" id="lookupBtn">Decode</button>
+      </div>
+      <div class="hint">Type a card code and press decode, or hit enter.</div>
+      <div class="stage" id="stage">
+        <div class="empty-msg"><span class="big">&#9670;</span>No file pulled yet. Enter a code above.</div>
+      </div>
+    </div>
+
+    <!-- MY COLLECTION -->
+    <div class="view" id="view-mycollection">
+      <h2 class="section-title">My Collection</h2>
+      <div class="grid" id="collectionGrid"></div>
+      <div class="stage" id="collectionOverlay" style="display:none; cursor:pointer;"></div>
+    </div>
+
+    <!-- ADD A CODE (signed-in agents) -->
+    <div class="view" id="view-addcode">
+      <h2 class="section-title">Add a Code to a Card</h2>
+      <p class="hint" style="margin-bottom:16px;">Every physical card has a different code, even for the same numbered card. If you have a card that's already in the archive, submit your copy's code here — the owner reviews and approves new codes before they start working, so made-up codes won't unlock anything.</p>
+      <div class="form-grid">
+        <div>
+          <label>Card number</label>
+          <input type="text" id="ac-cardnum" placeholder="e.g. 400">
+        </div>
+        <div>
+          <label>Your code</label>
+          <input type="text" id="ac-code" placeholder="Code printed on your copy">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" id="ac-submitBtn">Submit for Approval</button>
+        <span class="form-msg" id="ac-msg"></span>
+      </div>
+    </div>
+
+    <!-- BROWSE (owner) -->
+    <div class="view" id="view-browse">
+      <h2 class="section-title">Case Files</h2>
+      <div class="browse-toolbar">
+        <input type="text" id="searchInput" placeholder="Filter by name...">
+      </div>
+      <div class="grid" id="browseGrid"></div>
+      <div class="stage" id="browseCardOverlay" style="display:none; cursor:pointer;"></div>
+    </div>
+
+    <!-- ADD/EDIT CARD (owner) -->
+    <div class="view" id="view-add">
+      <h2 class="section-title" id="addFormTitle">Add a Card</h2>
+      <div class="form-grid">
+        <div>
+          <label>Card number</label>
+          <input type="text" id="f-cardnum" placeholder="e.g. 400">
+        </div>
+        <div>
+          <label>Card name</label>
+          <input type="text" id="f-name" placeholder="Card title">
+        </div>
+        <div>
+          <label>Card type</label>
+          <select id="f-type">
+            <option value="Agent">Agent</option>
+            <option value="Founder">Founder</option>
+            <option value="Location">Location</option>
+            <option value="Secret">Secret</option>
+            <option value="Prestige">Prestige</option>
+            <option value="Money">Money</option>
+            <option value="Replicator">Replicator</option>
+            <option value="Gadget">Gadget</option>
+          </select>
+        </div>
+        <div>
+          <label>Branch / faction</label>
+          <select id="f-branch">
+            <option value="">None</option>
+            <option value="Lucian">Lucian</option>
+            <option value="Ekaterina">Ekaterina</option>
+            <option value="Tomas">Tomas</option>
+            <option value="Janus">Janus</option>
+            <option value="Madrigal">Madrigal</option>
+            <option value="Outsider">Outsider</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Stats</label>
+          <textarea id="f-stats" placeholder="Any numbers/stats printed on the card..."></textarea>
+        </div>
+        <div class="full">
+          <label>Power / effect (optional)</label>
+          <textarea id="f-power" placeholder="Gameplay effect, if any..."></textarea>
+        </div>
+        <div class="full">
+          <label>Codes (one per line — every physical copy can have a different code)</label>
+          <textarea id="f-codes" placeholder="ABC123&#10;XYZ789"></textarea>
+        </div>
+        <div class="full">
+          <label>Photo (optional)</label>
+          <div class="photo-drop" id="photoDrop">
+            <span id="photoLabel">Click to upload a photo or screenshot of the card</span>
+            <input type="file" id="f-photo" accept="image/*">
+          </div>
+          <img id="photoPreview" class="photo-preview">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" id="saveBtn">Save Card</button>
+        <button class="btn secondary" id="clearBtn">Clear Form</button>
+        <span class="form-msg" id="formMsg"></span>
+      </div>
+    </div>
+
+    <!-- REVIEW CODES (owner) -->
+    <div class="view" id="view-review">
+      <h2 class="section-title">Review Submitted Codes</h2>
+      <p class="hint" style="margin-bottom:16px;">Codes submitted by agents wait here until you approve them. Approve only codes you believe come from a real physical card.</p>
+      <div id="reviewList"></div>
+    </div>
+
+    <div class="stats-line">
+      <span id="statCount">0 cards on file</span>
+      <span id="statHint"></span>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, arrayUnion, arrayRemove
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvMfI-VChDSDxR6hrnL4nxLBAXsoOJ8W8",
+    authDomain: "clues-92e3f.firebaseapp.com",
+    projectId: "clues-92e3f",
+    storageBucket: "clues-92e3f.firebasestorage.app",
+    messagingSenderId: "305273141125",
+    appId: "1:305273141125:web:932aac8496b5df9cb9b6ec"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  let cards = {};          // cardNumber -> card object
+  let codeIndex = {};      // CODE (uppercase) -> cardNumber
+  let ownerUid = null;
+  let isOwner = false;
+  let me = null;            // { uid, agentName, found: [cardNumbers] } once signed in
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  /* ---------- data loading ---------- */
+  async function loadOwnerConfig(){
+    try{
+      const snap = await getDoc(doc(db, 'config', 'owner-auth'));
+      ownerUid = snap.exists() ? snap.data().ownerUid : null;
+    }catch(e){ console.error('Load owner config failed:', e); ownerUid = null; }
+  }
+
+  function rebuildCodeIndex(){
+    codeIndex = {};
+    Object.values(cards).forEach(c => {
+      (c.codes || []).forEach(code => { codeIndex[code.toUpperCase()] = c.cardNumber; });
+    });
+  }
+
+  async function loadCards(){
+    try{
+      const snap = await getDocs(collection(db, 'cards'));
+      cards = {};
+      snap.forEach(d => {
+        const data = d.data();
+        const cardNumber = data.cardNumber || d.id;
+        const codes = Array.isArray(data.codes) ? data.codes : (data.code ? [data.code] : []);
+        const pendingCodes = Array.isArray(data.pendingCodes) ? data.pendingCodes : [];
+        cards[cardNumber] = { ...data, cardNumber, codes, pendingCodes };
+      });
+    }catch(e){ console.error('Load cards failed:', e); cards = {}; }
+    rebuildCodeIndex();
+    updateStats();
+  }
+
+  async function saveCard(cardObj){
+    await setDoc(doc(db, 'cards', cardObj.cardNumber), cardObj);
+    cards[cardObj.cardNumber] = cardObj;
+    rebuildCodeIndex();
+  }
+
+  function updateStats(){
+    const count = Object.keys(cards).length;
+    document.getElementById('statCount').textContent = count + (count === 1 ? ' card on file' : ' cards on file');
+  }
+
+  /* ---------- card rendering ---------- */
+  function cardHTML(c, foundBadge, showEditBtn){
+    const photo = c.photo
+      ? `<img class="card-photo" src="${c.photo}">`
+      : `<div class="card-photo-empty">No photo on file</div>`;
+    const tags = [];
+    if(c.type) tags.push(`<span class="tag">${escapeHtml(c.type)}</span>`);
+    if(c.branch) tags.push(`<span class="tag branch">${escapeHtml(c.branch)}</span>`);
+    return `
+      <div class="reveal-wrap">
+        <div class="card">
+          ${foundBadge ? '<span class="found-badge">In Collection</span>' : ''}
+          <span class="stamp-mark">Decoded</span>
+          ${photo}
+          <div class="card-body">
+            <div class="card-top">
+              <p class="card-name">${escapeHtml(c.name)}</p>
+              <p class="card-num">Card #${escapeHtml(c.cardNumber)}</p>
+            </div>
+            <div class="card-tags">${tags.join('')}</div>
+            ${c.stats ? `<p class="card-power">${escapeHtml(c.stats)}</p>` : ''}
+            ${c.power ? `<p class="card-power">${escapeHtml(c.power)}</p>` : ''}
+            ${showEditBtn ? `<button class="btn secondary edit-card-btn" data-cardnum="${escapeHtml(c.cardNumber)}" style="margin-top:4px;">Edit Card</button>` : ''}
+            ${showEditBtn ? `<p class="codes-count">${(c.codes || []).length} approved code(s)${(c.pendingCodes||[]).length ? ', ' + c.pendingCodes.length + ' pending review' : ''}</p>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireEditButtons(container){
+    container.querySelectorAll('.edit-card-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = cards[btn.dataset.cardnum];
+        if(c) startEditCard(c);
+      });
+    });
+  }
+
+  /* ---------- lookup ---------- */
+  document.getElementById('lookupBtn').addEventListener('click', doLookup);
+  document.getElementById('lookupInput').addEventListener('keydown', e => { if(e.key === 'Enter') doLookup(); });
+
+  async function doLookup(){
+    const raw = document.getElementById('lookupInput').value.trim().toUpperCase();
+    const stage = document.getElementById('stage');
+    if(!raw){
+      stage.innerHTML = `<div class="empty-msg"><span class="big">&#9670;</span>Enter a code above.</div>`;
+      return;
+    }
+    const cardNumber = codeIndex[raw];
+    const match = cardNumber ? cards[cardNumber] : null;
+    if(match){
+      stage.innerHTML = cardHTML(match, false, isOwner);
+      if(isOwner) wireEditButtons(stage);
+      if(me){
+        if(!me.found.includes(match.cardNumber)){
+          me.found.push(match.cardNumber);
+          try{
+            await updateDoc(doc(db, 'players', me.uid), { found: arrayUnion(match.cardNumber) });
+          }catch(e){ console.error('Update collection failed:', e); }
+        }
+      }
+    } else {
+      stage.innerHTML = `<div class="empty-msg"><span class="big">&#10008;</span>No card found for "${escapeHtml(raw)}".</div>`;
+    }
+  }
+
+  /* ---------- tabs ---------- */
+  function showView(view){
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const tab = document.querySelector('.tab[data-view="' + view + '"]');
+    if(tab) tab.classList.add('active');
+    document.getElementById('view-' + view).classList.add('active');
+    if(view === 'browse') renderBrowse(document.getElementById('searchInput').value);
+    if(view === 'mycollection') renderCollection();
+    if(view === 'review') renderReview();
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const view = tab.dataset.view;
+      if((view === 'browse' || view === 'add' || view === 'review') && !isOwner) return;
+      if((view === 'mycollection' || view === 'addcode') && !me) return;
+      showView(view);
+    });
+  });
+
+  /* ---------- sign in / out ---------- */
+  function updateUserUI(){
+    const status = document.getElementById('userStatus');
+    const ownerHint = document.getElementById('ownerHint');
+    document.getElementById('tabCollection').hidden = !me;
+    document.getElementById('tabAddCode').hidden = !me;
+    document.getElementById('tabBrowse').hidden = !isOwner;
+    document.getElementById('tabAdd').hidden = !isOwner;
+    document.getElementById('tabReview').hidden = !isOwner;
+
+    if(me){
+      status.innerHTML = '<span class="who">' + escapeHtml(me.agentName) + '</span>'
+        + (isOwner ? '<span class="owner-badge">Owner</span>' : '')
+        + ' &middot; <a id="signInLink">Log out</a>';
+    } else {
+      status.innerHTML = '<a id="signInLink">Sign In with Google</a>';
+    }
+    document.getElementById('signInLink').addEventListener('click', onSignInLinkClick);
+
+    if(me && !isOwner && !ownerUid){
+      ownerHint.innerHTML = '<a id="claimOwnerLink">No owner yet — claim owner access</a>';
+      document.getElementById('claimOwnerLink').addEventListener('click', claimOwner);
+    } else {
+      ownerHint.innerHTML = '';
+    }
+  }
+
+  async function onSignInLinkClick(){
+    if(me){
+      try{ await signOut(auth); }catch(e){ console.error(e); }
+      me = null; isOwner = false;
+      updateUserUI();
+      showView('lookup');
+    } else {
+      document.getElementById('signinMsg').textContent = '';
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-signin').classList.add('active');
+    }
+  }
+  document.getElementById('signInLink').addEventListener('click', onSignInLinkClick);
+
+  document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('signinMsg');
+    try{
+      const cred = await signInWithPopup(auth, googleProvider);
+      const snap = await getDoc(doc(db, 'players', cred.user.uid));
+      if(snap.exists()){
+        const data = snap.data();
+        me = { uid: cred.user.uid, agentName: data.agentName, found: data.found || [] };
+        isOwner = ownerUid ? (cred.user.uid === ownerUid) : false;
+        updateUserUI();
+        showView('lookup');
+      } else {
+        document.getElementById('chooseNameInput').value = cred.user.displayName || '';
+        document.getElementById('chooseNameMsg').textContent = '';
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-choosename').classList.add('active');
+      }
+    }catch(e){
+      console.error('Google sign-in failed:', e);
+      msg.textContent = 'Sign-in failed: ' + (e.message || e.code || 'unknown error');
+      msg.className = 'form-msg err';
+    }
+  });
+
+  document.getElementById('chooseNameBtn').addEventListener('click', async () => {
+    const name = document.getElementById('chooseNameInput').value.trim();
+    const msg = document.getElementById('chooseNameMsg');
+    if(!name){ msg.textContent = 'Enter an agent name.'; msg.className = 'form-msg err'; return; }
+    const user = auth.currentUser;
+    if(!user){ msg.textContent = 'Session expired, try signing in again.'; msg.className = 'form-msg err'; return; }
+    try{
+      await setDoc(doc(db, 'players', user.uid), { agentName: name, found: [] });
+      me = { uid: user.uid, agentName: name, found: [] };
+      isOwner = ownerUid ? (user.uid === ownerUid) : false;
+      updateUserUI();
+      showView('lookup');
+    }catch(e){
+      console.error('Save agent name failed:', e);
+      msg.textContent = 'Could not save: ' + (e.message || e.code || 'unknown error');
+      msg.className = 'form-msg err';
+    }
+  });
+
+  async function claimOwner(){
+    const user = auth.currentUser;
+    if(!user) return;
+    try{
+      await setDoc(doc(db, 'config', 'owner-auth'), { ownerUid: user.uid });
+      ownerUid = user.uid;
+      isOwner = true;
+      updateUserUI();
+      showView('browse');
+    }catch(e){
+      console.error('Claim owner failed:', e);
+      alert('Could not claim owner access: ' + (e.message || e.code || 'unknown error'));
+    }
+  }
+
+  /* ---------- my collection ---------- */
+  function renderCollection(){
+    const grid = document.getElementById('collectionGrid');
+    if(!me || me.found.length === 0){
+      grid.innerHTML = `<div class="grid-empty">No cards decoded yet. Head to Lookup and enter a code.</div>`;
+      return;
+    }
+    grid.innerHTML = me.found.filter(num => cards[num]).map(num => {
+      const c = cards[num];
+      const photo = c.photo ? `<img class="mini-photo" src="${c.photo}">` : `<div class="mini-photo-empty"></div>`;
+      return `<div class="mini-card" data-cardnum="${escapeHtml(num)}">${photo}<div class="mini-info"><p class="mini-name">${escapeHtml(c.name)}</p></div></div>`;
+    }).join('');
+    grid.querySelectorAll('.mini-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const c = cards[el.dataset.cardnum];
+        const overlay = document.getElementById('collectionOverlay');
+        overlay.innerHTML = cardHTML(c, true, false);
+        overlay.style.display = 'flex';
+      });
+    });
+  }
+  document.getElementById('collectionOverlay').addEventListener('click', () => {
+    document.getElementById('collectionOverlay').style.display = 'none';
+  });
+
+  /* ---------- review pending codes (owner) ---------- */
+  function renderReview(){
+    const list = document.getElementById('reviewList');
+    const pendingCards = Object.values(cards).filter(c => (c.pendingCodes || []).length > 0)
+      .sort((a,b) => (a.cardNumber||'').localeCompare(b.cardNumber||'', undefined, {numeric:true}));
+
+    if(pendingCards.length === 0){
+      list.innerHTML = `<div class="grid-empty">No codes waiting for review.</div>`;
+      return;
+    }
+    list.innerHTML = pendingCards.map(c => `
+      <div style="border:1px solid rgba(43,27,18,0.2); border-radius:6px; padding:14px 16px; margin-bottom:12px; background:#fbf3dd;">
+        <p style="font-family:'Cinzel',serif; font-weight:700; margin:0 0 8px;">Card #${escapeHtml(c.cardNumber)} — ${escapeHtml(c.name)}</p>
+        ${c.pendingCodes.map(code => `
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <span style="font-family:'Space Mono',monospace; font-size:13px; flex:1;">${escapeHtml(code)}</span>
+            <button class="btn secondary approve-btn" data-cardnum="${escapeHtml(c.cardNumber)}" data-code="${escapeHtml(code)}" style="padding:0 14px; min-height:30px; font-size:10px;">Approve</button>
+            <button class="btn secondary reject-btn" data-cardnum="${escapeHtml(c.cardNumber)}" data-code="${escapeHtml(code)}" style="padding:0 14px; min-height:30px; font-size:10px; color:var(--wax); border-color:var(--wax);">Reject</button>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.approve-btn').forEach(btn => {
+      btn.addEventListener('click', () => approveCode(btn.dataset.cardnum, btn.dataset.code));
+    });
+    list.querySelectorAll('.reject-btn').forEach(btn => {
+      btn.addEventListener('click', () => rejectCode(btn.dataset.cardnum, btn.dataset.code));
+    });
+  }
+
+  async function approveCode(cardNumber, code){
+    try{
+      await updateDoc(doc(db, 'cards', cardNumber), {
+        codes: arrayUnion(code),
+        pendingCodes: arrayRemove(code)
+      });
+      const c = cards[cardNumber];
+      if(!c.codes) c.codes = [];
+      c.codes.push(code);
+      c.pendingCodes = (c.pendingCodes || []).filter(x => x !== code);
+      rebuildCodeIndex();
+      renderReview();
+    }catch(e){
+      console.error('Approve code failed:', e);
+      alert('Could not approve: ' + (e.message || e.code || 'unknown error'));
+    }
+  }
+
+  async function rejectCode(cardNumber, code){
+    try{
+      await updateDoc(doc(db, 'cards', cardNumber), { pendingCodes: arrayRemove(code) });
+      const c = cards[cardNumber];
+      c.pendingCodes = (c.pendingCodes || []).filter(x => x !== code);
+      renderReview();
+    }catch(e){
+      console.error('Reject code failed:', e);
+      alert('Could not reject: ' + (e.message || e.code || 'unknown error'));
+    }
+  }
+
+  /* ---------- add a code (signed-in user) ---------- */
+  document.getElementById('ac-submitBtn').addEventListener('click', async () => {
+    const cardNumber = document.getElementById('ac-cardnum').value.trim();
+    const code = document.getElementById('ac-code').value.trim().toUpperCase();
+    const msg = document.getElementById('ac-msg');
+    if(!cardNumber || !code){
+      msg.textContent = 'Enter both the card number and your code.'; msg.className = 'form-msg err'; return;
+    }
+    if(!cards[cardNumber]){
+      msg.textContent = "That card number isn't in the archive yet — ask the owner to add it first.";
+      msg.className = 'form-msg err';
+      return;
+    }
+    if((cards[cardNumber].codes || []).map(c => c.toUpperCase()).includes(code)){
+      msg.textContent = 'That code is already active for this card.';
+      msg.className = 'form-msg ok';
+      return;
+    }
+    if((cards[cardNumber].pendingCodes || []).map(c => c.toUpperCase()).includes(code)){
+      msg.textContent = 'That code is already awaiting owner approval.';
+      msg.className = 'form-msg ok';
+      return;
+    }
+    try{
+      await updateDoc(doc(db, 'cards', cardNumber), { pendingCodes: arrayUnion(code) });
+      if(!cards[cardNumber].pendingCodes) cards[cardNumber].pendingCodes = [];
+      cards[cardNumber].pendingCodes.push(code);
+      msg.textContent = 'Submitted — the owner needs to approve it before it works.';
+      msg.className = 'form-msg ok';
+      document.getElementById('ac-cardnum').value = '';
+      document.getElementById('ac-code').value = '';
+    }catch(e){
+      console.error('Submit code failed:', e);
+      msg.textContent = 'Could not submit: ' + (e.message || e.code || 'unknown error');
+      msg.className = 'form-msg err';
+    }
+  });
+
+  /* ---------- browse (owner) ---------- */
+  function renderBrowse(filter){
+    const grid = document.getElementById('browseGrid');
+    const list = Object.values(cards).filter(c => {
+      if(!filter) return true;
+      return c.name.toLowerCase().includes(filter.toLowerCase());
+    }).sort((a,b) => (a.cardNumber||'').localeCompare(b.cardNumber||'', undefined, {numeric:true}));
+
+    if(list.length === 0){
+      grid.innerHTML = `<div class="grid-empty">No cards match.</div>`;
+      return;
+    }
+    grid.innerHTML = list.map(c => {
+      const photo = c.photo ? `<img class="mini-photo" src="${c.photo}">` : `<div class="mini-photo-empty"></div>`;
+      return `<div class="mini-card" data-cardnum="${escapeHtml(c.cardNumber)}">${photo}<div class="mini-info"><p class="mini-name">${escapeHtml(c.name)}</p></div></div>`;
+    }).join('');
+
+    grid.querySelectorAll('.mini-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const c = cards[el.dataset.cardnum];
+        const overlay = document.getElementById('browseCardOverlay');
+        overlay.innerHTML = cardHTML(c, false, true);
+        overlay.style.display = 'flex';
+        wireEditButtons(overlay);
+      });
+    });
+  }
+  document.getElementById('searchInput').addEventListener('input', e => renderBrowse(e.target.value));
+  document.getElementById('browseCardOverlay').addEventListener('click', (e) => {
+    if(e.target.closest('.edit-card-btn')) return;
+    document.getElementById('browseCardOverlay').style.display = 'none';
+  });
+
+  /* ---------- add / edit card (owner) ---------- */
+  let pendingPhotoData = "";
+  let editingCardNumber = null;
+
+  function startEditCard(c){
+    editingCardNumber = c.cardNumber;
+    document.getElementById('addFormTitle').textContent = 'Edit Card #' + c.cardNumber;
+    document.getElementById('f-cardnum').value = c.cardNumber;
+    document.getElementById('f-cardnum').disabled = true;
+    document.getElementById('f-name').value = c.name || '';
+    document.getElementById('f-type').value = c.type || 'Agent';
+    document.getElementById('f-branch').value = c.branch || '';
+    document.getElementById('f-stats').value = c.stats || '';
+    document.getElementById('f-power').value = c.power || '';
+    document.getElementById('f-codes').value = (c.codes || []).join('\n');
+    pendingPhotoData = c.photo || '';
+    const preview = document.getElementById('photoPreview');
+    if(c.photo){
+      preview.src = c.photo; preview.style.display = 'block';
+      document.getElementById('photoLabel').textContent = 'Current photo (upload to replace)';
+    } else {
+      preview.style.display = 'none';
+      document.getElementById('photoLabel').textContent = 'Click to upload a photo or screenshot of the card';
+    }
+    document.getElementById('browseCardOverlay').style.display = 'none';
+    document.getElementById('formMsg').textContent = '';
+    document.getElementById('formMsg').className = 'form-msg';
+    showView('add');
+  }
+
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('f-photo').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const label = document.getElementById('photoLabel');
+    label.textContent = 'Compressing...';
+    try{
+      let quality = 0.75;
+      let dataUrl = await compressImage(file, 700, quality);
+      while(dataUrl.length > 650000 && quality > 0.3){
+        quality -= 0.15;
+        dataUrl = await compressImage(file, 700, quality);
+      }
+      pendingPhotoData = dataUrl;
+      const preview = document.getElementById('photoPreview');
+      preview.src = pendingPhotoData; preview.style.display = 'block';
+      label.textContent = file.name + ' (compressed)';
+    }catch(err){
+      console.error('Photo compression failed:', err);
+      label.textContent = 'Could not process that image, try another.';
+      pendingPhotoData = '';
+    }
+  });
+
+  function clearFormFields(){
+    editingCardNumber = null;
+    document.getElementById('addFormTitle').textContent = 'Add a Card';
+    document.getElementById('f-cardnum').value = '';
+    document.getElementById('f-cardnum').disabled = false;
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-type').value = 'Agent';
+    document.getElementById('f-branch').value = '';
+    document.getElementById('f-stats').value = '';
+    document.getElementById('f-power').value = '';
+    document.getElementById('f-codes').value = '';
+    document.getElementById('f-photo').value = '';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoLabel').textContent = 'Click to upload a photo or screenshot of the card';
+    pendingPhotoData = '';
+  }
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    clearFormFields();
+    document.getElementById('formMsg').textContent = '';
+    document.getElementById('formMsg').className = 'form-msg';
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const cardNumber = editingCardNumber || document.getElementById('f-cardnum').value.trim();
+    const name = document.getElementById('f-name').value.trim();
+    const msg = document.getElementById('formMsg');
+    if(!cardNumber || !name){
+      msg.textContent = 'Card number and name are required.'; msg.className = 'form-msg err'; return;
+    }
+    const codes = document.getElementById('f-codes').value
+      .split(/[\n,]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+    const uniqueCodes = [...new Set(codes)];
+    const cardObj = {
+      cardNumber, name,
+      type: document.getElementById('f-type').value,
+      branch: document.getElementById('f-branch').value,
+      stats: document.getElementById('f-stats').value.trim(),
+      power: document.getElementById('f-power').value.trim(),
+      codes: uniqueCodes,
+      photo: pendingPhotoData
+    };
+    if(JSON.stringify(cardObj).length > 950000){
+      msg.textContent = 'Photo is still too large even after compression — try a smaller image.';
+      msg.className = 'form-msg err';
+      return;
+    }
+    try{
+      await saveCard(cardObj);
+      msg.textContent = (editingCardNumber ? 'Updated "' : 'Saved "') + name + '".';
+      msg.className = 'form-msg ok';
+      updateStats();
+      renderBrowse(document.getElementById('searchInput').value);
+      clearFormFields();
+    }catch(e){
+      console.error('Save card failed:', e);
+      msg.textContent = 'Save failed: ' + (e.message || e.code || 'unknown error') + ' (check console)';
+      msg.className = 'form-msg err';
+    }
+  });
+
+  /* ---------- startup ---------- */
+  (async () => {
+    await Promise.all([loadOwnerConfig(), loadCards()]);
+    updateUserUI();
+
+    onAuthStateChanged(auth, async (user) => {
+      if(!user){ me = null; isOwner = false; updateUserUI(); return; }
+      try{
+        const snap = await getDoc(doc(db, 'players', user.uid));
+        if(snap.exists()){
+          const data = snap.data();
+          me = { uid: user.uid, agentName: data.agentName, found: data.found || [] };
+          isOwner = ownerUid ? (user.uid === ownerUid) : false;
+          updateUserUI();
+        }
+      }catch(e){ console.error('Restore session failed:', e); }
+    });
+  })();
+</script>
+</body>
+</html>
