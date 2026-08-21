@@ -1,3 +1,2 @@
 # The39Clues-
-the unnofficial 39 clues cards database 
-[Uploading README.md…]()
+the unofficial 39 clues cards database 
